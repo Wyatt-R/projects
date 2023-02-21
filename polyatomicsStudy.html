@@ -1,0 +1,236 @@
+ <!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Study Polyatomics</title>
+		<style type="text/css">
+			body{
+				margin: 0;
+				background: #fff;
+				font-size: 30px;
+			}
+			#question{
+				width: 100%;
+				text-align: center;
+				font-size: 40px;
+			}
+			#answerBox{
+				width: 300px;
+				margin-left: calc(50% - 150px);
+				border: 0;
+				height: 25px;
+				font-size: 20px;
+				box-shadow: 0 0 0 1px #000, 0 0 8px 3px #0003;
+			}
+			#answerBox:focus{
+				outline: none;
+				box-shadow: 0 0 0 2px #000;
+			}
+			#result{
+				position: absolute;
+				top: 5px;
+				left: 5px;
+			}
+			#history{
+				width: 100%;
+			}
+			.historyItem{
+				width: 100%;
+				display: flex;
+				justify-content: space-around;
+			}
+			.historyItem > * {
+				width: 33%;
+				text-align: center;
+			}
+			.choices{
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				margin-bottom: 15px;
+			}
+			.buttonsContainer{
+				width: 50%;
+				 display: flex;
+				 justify-content: space-around;
+			}
+			.button{
+				 font-size: 20px;
+				 padding: 5px 10px;
+				 background: #ddd;
+				 border-radius: 5px;
+				 border: 2px #000 solid;
+				 cursor: pointer;
+				 user-select: none;
+				 transition: 0.2s;
+			}
+			.button:hover{
+				transform: scale(1.05);
+			}
+			#upArrow{
+				position: absolute;
+				top: 10px;
+				right: 30px;
+				font-size: 35px;
+				font-weight: bold;
+				font-family: Helvetica;
+			}
+			#downArrow{
+				position: absolute;
+				top: 5px;
+				right: 5px;
+				font-family: Helvetica;
+				font-weight: bold;
+			}
+			.hidden{
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="question"></div>
+		<input id="answerBox">
+		<div id="result">0/0</div>
+		<div class="choices">
+			Sets:
+			<div class="buttonsContainer">
+				<div class="button" id="elements">Elements</div>
+				<div class="button" id="polyatomics">Polyatomics</div>
+				<div class="button" id="naming">Naming</div>
+			</div>
+			Orientation:
+			<div class="button" id="flip">Flip</div>
+		</div>
+		<div id="history">
+			<div class="historyItem">
+				<div>Prompt</div>
+				<div>Correct Answer</div>
+				<div>Your Answer</div>
+			</div>
+		</div>
+		<div id="upArrow" class="hidden">^</div>
+		<div id="downArrow" class="hidden">v</div>
+	</body>
+	<script type="text/javascript">
+		var total = 0;
+		var correct = 0;
+		var list;
+		var state = 0;
+		var elem = [];
+		var ARR = [];
+		polyatomics();
+		function polyatomics() {
+			list = [["H₂PO₃⁻", "Dihydrogen Phosphite"],["H₂PO₄⁻", "Dihydrogen Phosphate"],["HSO₃⁻", "Hydrogen Sulfite"],["HSO₄⁻", "Hydrogen Sulfate"],["HC₂O₄⁻", "Hydrogen Oxalate"],["SCN⁻", "Thiocyanate"],["CN⁻", "Cyanide"],["C₂H₃O₂⁻", "Acetate"],["MnO₄⁻", "Permanganate"],["HCO₃⁻", "Hydrogen Carbonate"],["OH⁻", "Hydroxide"],["NO₂⁻", "Nitrite"],["NO₃⁻", "Nitrate"],["ClO⁻", "Hypochlorite"],["ClO₂⁻", "Chlorite"],["ClO₃⁻", "Chlorate"],["ClO₄⁻", "Perchlorate"],["IO⁻", "Hypoiodite"],["IO₂⁻", "Iodite"],["IO₃⁻", "Iodate"],["IO₄⁻", "Periodate"],["BrO₂⁻", "Bromite"],["BrO₃⁻", "Bromate"],["BrO₄⁻", "Perbromate"],["HPO₃²⁻", "Hydrogen Phosphite"],["HPO₄²⁻", "Hydrogen Phosphate"],["SO₃²⁻", "Sulfite"],["SO₄²⁻", "Sulfate"],["C₂O₄²⁻", "Oxalate"],["S₂O₃²⁻", "Thiosulfate"],["CrO₄²⁻", "Chromate"],["Cr₂O₇²⁻", "Dichromate"],["CO₃²⁻", "Carbonate"],["SiO₃²⁻", "Silicate"],["PO₃³⁻", "Phosphite"],["PO₄³⁻", "Phosphate"],["AsO₄³⁻", "Arsenate"],["BO₃³⁻", "Borate"]/*,["CH₄", "Methane"],["C₂H₆", "Ethane"],["C₃H₈", "Propane"],["C₄H₁₀", "Butane"],["C₅H₁₂", "Pentane"],["C₆H₁₄", "Hexane"],["C₇H₁₆", "Heptane"],["C₈H₁₈", "Octane"],["C₉H₂₀", "Nonane"],["C₁₀H₂₂", "Decane"]*/,["NH₄⁺", "Ammonium"]];
+		}
+		function elements() {
+			list = [["H","Hydrogen"],["He","Helium"],["Li","Lithium"],["Be","Beryllium"],["B","Boron"],["C","Carbon"],["N","Nitrogen"],["O","Oxygen"],["F","Fluorine"],["Ne","Neon"],["Na","Sodium"],["Mg","Magnesium"],["Al","Aluminum"],["Si","Silicon"],["P","Phosphorus"],["S","Sulfur"],["Cl","Chlorine"],["Ar","Argon"],["K","Potassium"],["Ca","Calcium"],["Sc","Scandium"],["Ti","Titanium"],["V","Vanadium"],["Cr","Chromium"],["Mn","Manganese"],["Fe","Iron"],["Co","Cobalt"],["Ni","Nickel"],["Cu","Copper"],["Zn","Zinc"],["Ga","Gallium"],["Ge","Germanium"],["As","Arsenic"],["Se","Selenium"],["Br","Bromine"],["Kr","Krypton"],["Rb","Rubidium"],["Sr","Strontium"],["Y","Yttrium"],["Zr","Zirconium"],["Nb","Niobium"],["Mo","Molybdenum"],["Tc","Technetium"],["Ru","Ruthenium"],["Rh","Rhodium"],["Pd","Palladium"],["Ag","Silver"],["Cd","Cadmium"],["In","Indium"],["Sn","Tin"],["Sb","Antimony"],["Te","Tellurium"],["I","Iodine"],["Xe","Xenon"],["Cs","Caesium"],["Ba","Barium"],["La","Lanthanum"],["Ce","Cerium"],["Pr","Praseodymium"],["Nd","Neodymium"],["Pm","Promethium"],["Sm","Samarium"],["Eu","Europium"],["Gd","Gadolinium"],["Tb","Terbium"],["Dy","Dysprosium"],["Ho","Holmium"],["Er","Erbium"],["Tm","Thulium"],["Yb","Ytterbium"],["Lu","Lutetium"],["Hf","Hafnium"],["Ta","Tantalum"],["W","Tungsten"],["Re","Rhenium"],["Os","Osmium"],["Ir","Iridium"],["Pt","Platinum"],["Au","Gold"],["Hg","Mercury"],["Tl","Thallium"],["Pb","Lead"],["Bi","Bismuth"],["Po","Polonium"],["At","Astatine"],["Rn","Radon"]];
+			list = list.slice(elem[0] - 1, elem[1]);
+			alert(list.length)
+		}
+
+		function naming() {
+			list = [["(NH₄)₂S","ammonium sulfide"],["Na₃BO₃","sodium borate"],["Al₂(SO₄)₃","aluminum sulfate"],["KNO₃","potassium nitrate"],["Pb₃(PO₄)₂","lead (II) phosphate"],["P₂O₅","diphosphorus pentoxide"],["CaF₂","calcium fluoride"],["Ni(NO₃)₂","nickel (II) nitrate"],["AgCN","silver cyanide"],["(NH₄)₂SO₃","ammonium sulfite"],["ZnSO₄","zinc sulfate"],["SnCl₂","tin (II) chloride"],["SbCl₃","antimony (III) chloride"],["Ag₂S","silver sulfide"],["Mg(OH)₂","magnesium hydroxide"],["(NH₄)₂CO₃","ammonium carbonate"],["NiC₂H₃O₂","nickel (I) acetate"],["Na₂CrO₄","sodium chromate"],["KMnO₄","potassium permanganate"],["AgClO₄","silver perchlorate"],["K₃PO₄","potassium phosphate"],["NiI","nickel (I) iodide"],["Pb(ClO₂)₂","lead chlorite"],["Fe(HSO₃)₂","iron (II) hydrogen sulfite"],["Mg(NO₂)₂","magnesium nitrite"],["Fe₂(Cr₂O₇)₃","iron (III) dichromate"],["FeCrO₄","iron (II) chromate"],["Cu(OH)₂","copper (II) hydroxide"],["Ca(ClO₃)₂","calcium chlorate"],["(NH₄)₂O","ammonium oxide"],["Al(ClO₄)₃","aluminum perchlorate"],["Na₃PO₄","sodium phosphate"],["AgBrO","silver hypobromite"],["LiH₂PO₄","lithium dihydrogen phosphate"],["K₂Se","potassium selenide"],["SnBr₄","tin (IV) bromide"],["LiIo₃","lithium iodate"],["Mg(SCN)₂","magnesium thiocyanate"],["Al₂(C₂H₃O₂)₃","aluminum acetate"],["Ba₂CrO₄","barium chromate"],["CoCl₃","cobalt (III) chloride"],["HgF₂","mercury (II) fluoride"],["KCL","potassium chloride"],["KMnO₃","potassium manganate"],["KClO₂","potassium chlorite"],["Ba(OH)₂","barium hydroxide"],["NH₄MnO₄","ammonium permanganate"],["CaCO₃","calcium carbonate"],["Ba₃(PO₄)₂","barium phosphate"],["Sn(HCO₃)₄","tin (IV) hydrogen carbonate"]];
+		}
+		var q = document.getElementById('question');
+		var a = document.getElementById('answerBox');
+		var r = document.getElementById('result');
+		var h = document.getElementById('history');
+		document.getElementById('elements').addEventListener('click', () => {
+			if (elem.length != 2) {
+				elem.push(parseInt(prompt("What element do you want to start at", "")));
+				elem.push(parseInt(prompt("What element do you want to end with", "")));
+			}
+			elements();
+			reset();
+		})
+		document.getElementById('polyatomics').addEventListener('click', () => {
+			polyatomics();
+			reset();
+		})
+		document.getElementById('naming').addEventListener('click', () => {
+			naming();
+			reset();
+		})
+		document.getElementById('flip').addEventListener('click', () => {
+			if (state == 0) {
+				state = 1;
+			} else {
+				state = 0;
+			}
+			reset();
+		})
+		q.innerHTML = randomQ();
+		var current;
+
+		function randomQ() {
+			current = Math.floor(Math.random() * (list.length - 0.01));
+			return list[current][state];
+		}
+		var sup = false;
+		var sub = false;
+		a.addEventListener('keypress', (e) => {
+			if (e.key != 'Enter') return;
+			total += 1;
+
+			var temp = a.value.split(':');
+			ARR.push([temp[0], temp[1]]);
+
+			if (a.value.toLowerCase() == list[current][(1+state)%2].toLowerCase()) {
+				correct += 1;
+			} else {
+				h.innerHTML += `<div class="historyItem"><div>${list[current][state]}</div><div>${list[current][(1+state)%2]}</div><div>${a.value}</div></div>`
+				console.log(a.value, list[current][state], list[current][(1+state)%2])
+			}
+			r.innerHTML = `${correct}/${total}`;
+			a.value = '';
+			q.innerHTML = randomQ();
+		})
+		a.addEventListener('keydown', (e) => {
+			if ( (sub && e.code == "ArrowUp") || (sup && e.code == "ArrowDown") ) {
+				return;
+			} else if (sup && e.code == "ArrowUp") {
+				sup = false;
+				document.getElementById('upArrow').classList.add('hidden');
+			} else if (!sup && e.code == "ArrowUp") {
+				sup = true;
+				document.getElementById('upArrow').classList.remove('hidden');
+			}
+			if (sub && e.code == "ArrowDown") {
+				sub = false;
+				document.getElementById('downArrow').classList.add('hidden');
+			} else if (!sub && e.code == "ArrowDown") {
+				sub = true;
+				document.getElementById('downArrow').classList.remove('hidden');
+			}
+
+			if (sup && e.key == "2") a.value += '²';
+			if (sup && e.key == "3") a.value += '³';
+			if (sup && e.key == '+') a.value += '⁺';
+			if (sup && e.key == "-") a.value += '⁻';
+
+			if (sub && e.key == "0") a.value += '₀';
+			if (sub && e.key == "1") a.value += '₁';
+			if (sub && e.key == "2") a.value += '₂';
+			if (sub && e.key == "3") a.value += '₃';
+			if (sub && e.key == "4") a.value += '₄';
+			if (sub && e.key == "5") a.value += '₅';
+			if (sub && e.key == "6") a.value += '₆';
+			if (sub && e.key == "7") a.value += '₇';
+			if (sub && e.key == "8") a.value += '₈';
+			if (sub && e.key == "9") a.value += '₉';
+			if ( (sub || sup) && (e.key == "0" || e.key == "1" || e.key == "2" || e.key == "3" || e.key == "4" || e.key == "5" || e.key == "6" || e.key == "7" || e.key == "8" || e.key == "9" || e.key == "+" || e.key == "-")) {
+				setTimeout(function() {
+					a.value = a.value.substring(0, a.value.length - 1);
+				}, 1)
+			}
+		})
+		function reset() {
+			total = 0;
+			correct = 0;
+			r.innerHTML = '0/0';
+			h.innerHTML = '<div class="historyItem"><div>Prompt</div><div>Correct Answer</div><div>Your Answer</div></div>'
+			q.innerHTML = randomQ();
+		}
+	</script>
+</html>
