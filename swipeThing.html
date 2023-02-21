@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>IDK YET</title>
+		<style type="text/css">
+			:root{
+				--player-size: 35px;
+			}
+			body{
+				margin: 0;
+				background: #44baed;
+			}
+			.point{
+				width: 0;
+				height: 0;
+				position: fixed;
+				left: 100px;
+				top: 200px;
+				width: var(--player-size);
+				height: var(--player-size);
+				background: url("https://www.clipartmax.com/png/full/6-66628_see-here-airplane-clipart-transparent-background-cartoon-plane-top-view.png");
+				background-size: var(--player-size) var(--player-size);
+				transform: rotate(30deg);
+				z-index: -5;
+			}
+			.booster{
+				position: relative;
+				top: 100%;
+				left: calc(50% - 0.5px);
+				width: 1px;
+				height: 3px;
+				background-color: #ff6e03;
+				box-shadow: 0 0 5px 5px #ff6e03;
+			}
+			.cloud{
+				width: 50px;
+				height: 30px;
+				position: fixed;
+				left: 0;
+				top: 0;
+				box-shadow: 0 0 8px 3px #0003;
+				background: #ddf1f9;
+				z-index: -6;
+			}
+			.timeOfDay{
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				z-index: -4;
+				background: hsla(250, 80%, 0%, 0.8);
+
+			}
+			.info{
+				position: fixed;
+				z-index: -2;
+				left: 0;
+				top: 0;
+				padding: 5px;
+				text-align: center;
+				font-size: 20px;
+				user-select: none;
+				cursor: default;
+			}
+			.numPoints{
+				position: absolute;
+				width: 240px;
+				padding: 5px;
+				height: 25px;
+				border: #000 2px solid;
+				left: calc(50% - 125px);
+				top: 0;
+				z-index: -1;
+				font-family: Verdana;
+				font-size: 20px;
+				background: #fff;
+				text-align: center;
+				border-bottom-left-radius: 15px;
+				border-bottom-right-radius: 15px;
+				user-select: none;
+				cursor: default;
+			}
+			.numMiles{
+				position: absolute;
+				width: 190px;
+				padding: 2px;
+				height: 15px;
+				border: #000 2px solid;
+				border-top: none;
+				left: calc(50% - 100px);
+				top: calc(35px + 3px);
+				z-index: -1;
+				font-family: Verdana;
+				font-size: 10px;
+				background: #fff;
+				text-align: center;
+				border-bottom-left-radius: 15px;
+				border-bottom-right-radius: 15px;
+				user-select: none;
+				cursor: default;
+			}
+			.restartScreen{
+				width: 100vw;
+				height: 100vh;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				background: #44baed;
+				z-index: 100;
+			}
+			.instanceInfo{
+				font-family: Verdana;
+				color: #3a3a3a;
+				margin-bottom: 5vh;
+				font-size: 20px;
+				text-align: center;
+			}
+			.restartBtn{
+				user-select: none;
+				cursor: pointer;
+				background: #fff;
+				color: #3a3a3a;
+				padding: 15px 50px;
+				border-radius: 15px;
+				border: 3px #3a3a3a solid;
+				font-family: Verdana;
+				font-size: 20px;
+				font-weight: bolder;
+				transition: 0.3s;
+			}
+			.restartBtn:hover{
+				transform: scale(1.1);
+			}
+			.fadeOn{
+				animation-name: fadeOn;
+				animation-duration: 2.5s;
+
+			}
+			@keyframes fadeOn {
+				from{
+					opacity: 0;
+				}
+				to{
+					opacity: 1;
+				}
+			}
+
+
+
+			.hidden{
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="point">
+			<div class="booster hidden"></div>
+		</div>
+		<div class="info">
+			Powerups:
+			<br>Q - Boost - 5 PTS
+			<br>W - Blast - 7 PTS
+			<br>E - Radar - 2 PTS
+		</div>
+		<div class="numPoints">Points: 100.1</div>
+		<div class="numMiles">Miles: 100.1</div>
+		<div class="timeOfDay"></div>
+		<div class="restartScreen hidden">
+			<div class="instanceInfo">You traveled xxx miles. That's xxxx% of the way around the Earth</div>
+			<div class="restartBtn">
+				RESTART
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" defer>
+		//GLOBAL VARIABLES
+		var FPS = 50;
+
+		var pointX = 0;
+		var pointY = window.innerHeight/2;
+		var pointWidth = 35;
+		var pointHeight = 35;
+		var theta = 0;;
+
+		var mouseX = 0;
+		var mouseY = 0;
+
+		var width = window.innerWidth;
+		var height = window.innerHeight;
+
+		var screenHypotenuse = Math.sqrt( width**2 + height**2 );
+
+		var point = document.querySelector('.point');
+		var numPoints = document.querySelector('.numPoints');
+		var numMiles = document.querySelector('.numMiles');
+		var booster = document.querySelector('.booster');
+		var restartBtn = document.querySelector('.restartBtn');
+		var restartScreen = document.querySelector('.restartScreen');
+		var instanceInfo = document.querySelector('.instanceInfo');
+
+		var cloudSpawnRate = 0.5;
+		var thunderSpawnRate = 0.1;
+		var clouds = [];
+
+		var storm = false;
+
+		var ticks = 0;
+		var distance = 0;
+
+		var powerUps = {
+			boost: {
+				key: 'q',
+				pointsRequired: 5,
+				multiplier: 3,
+				on: false,
+				length: 3
+			},
+			blast: {
+				key: 'w',
+				pointsRequired: 7,
+				distance: pointHeight*10
+			},
+			radar: {
+				key: 'e',
+				pointsRequired: 2
+			}
+		}
+
+		var interval;
+
+		var maxScore = 0;
+		if (localStorage.maxScore) maxScore = parseFloat(localStorage.maxScore);
+		console.log(maxScore)
+
+		var totalDistance = 0;
+		if (localStorage.totalDistance) totalDistance = parseFloat(localStorage.totalDistance);
+		console.log(totalDistance)
+
+
+
+		//INTERVAL FUNCTION
+		function runGame() {
+			interval = setInterval(() => {
+				console.log('tick');
+				ticks += 1;
+				distance += 0.01;
+				numPoints.textContent = 'Points: ' + distance.toFixed(1);
+				numMiles.textContent = 'Miles: ' + (ticks/100).toFixed(1);
+				//FUNCTION VARIABLES
+				// Max speed is constant, so FPS does not affect it
+				var maxSpeed = 750;
+
+				maxSpeed = maxSpeed/FPS
+				// Distance between mouse and point
+				var d = Math.sqrt( (pointX - mouseX)**2 + (pointY - mouseY)**2 );
+				var speed = maxSpeed * Math.cos( Math.asin( d/screenHypotenuse - 1 ) );
+				if (powerUps.boost.on == true) speed = speed * powerUps.boost.multiplier;
+
+				// Calculate the angle between mouse and point
+				theta = Math.asin( (pointY - mouseY)/d );
+				var thetaFromCos = Math.acos( (mouseX - pointX)/d );
+				if (thetaFromCos > Math.PI/2) theta = Math.PI - theta;
+				if (theta < 0) theta = 2 * Math.PI + theta;
+
+				// Sets new point value
+				if ( Math.round( speed*Math.cos(theta) ) != 0) {
+					pointX += speed*Math.cos(theta);
+					pointY -= speed*Math.sin(theta);
+				}
+
+				// Assigns new point value to DIV
+				point.style.left = Math.round(pointX) - pointWidth/2 + 'px';
+				point.style.top = Math.round(pointY) - pointHeight/2 + 'px';
+				// Rotate the point according to the direction it's moving
+				point.style.transform = 'rotate(' + Math.round(theta * 180/Math.PI - 90) * -1 + 'deg)';
+
+				if (Math.random() < 0.05/FPS) {
+					storm = true;
+					setTimeout(() => {
+						storm = false;
+					}, 5000)
+				}
+				var divOfClouds = 1;
+				if (storm == true) divOfClouds = 2.5;
+				if (Math.random() < cloudSpawnRate/divOfClouds) spawnCloud();
+				moveClouds();
+				timeOfDay();
+
+
+				function timeOfDay() {
+					var dayLength = 60*FPS;
+					let time = (ticks + dayLength/4) % dayLength;
+
+					var l = 0;
+					var a;
+					if (time < dayLength/8) {
+						a = 0.8;
+					} else if (time < dayLength/4) {
+						a = 0.8 * (1 - (time - dayLength/8) / (dayLength/8));
+					} else if (time > (7 * dayLength)/8 ) {
+						a = 0.8;
+					} else if (time > (3 * dayLength)/4 ) {
+						a = 0.8 * ( (time - (3 * dayLength)/4) / ((dayLength)/8) );
+					} else {
+						a = 0;
+					};
+					document.querySelector('.timeOfDay').style.background = 'hsla(0,80%,0%,' + a + ')';
+				}
+			}, 1000/FPS)
+		}
+
+
+
+		// MOUSEMOVE FUNCTION
+		document.addEventListener('mousemove', function(e) {
+			// Updates mouseX and mouseY when they are each moved
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		})
+
+		// CLOUD FUNCTIONALITY
+		function spawnCloud() {
+			//Function variables
+			var cloudMaxSpeed = width * 0.3;
+			var cloudMinSpeed = width * 0.1;
+			var cloudMaxSize = width * 0.1;
+			var cloudMinSize = width * 0.03;
+			var xPosCloud = width;
+			var yPosCloud = Math.random() * height;
+
+			var cloudSpeed = Math.random() * (cloudMaxSpeed - cloudMinSpeed) + cloudMinSpeed;
+			var cloudWidth = Math.random() * (cloudMaxSize - cloudMinSize) + cloudMinSize;
+			var cloudHeight = cloudWidth * 0.75 * (Math.random() * (1.5 - 0.5) + 0.5);
+
+			// Creating element
+			var element = document.createElement('div');
+			element.classList.add('cloud');
+			document.body.append(element);
+			element.style.width = cloudWidth + 'px';
+			element.style.height = cloudHeight + 'px';
+			element.style.left = xPosCloud + 'px';
+			element.style.top = yPosCloud + 'px';
+
+			var isThunder = false;
+			if (Math.random() < thunderSpawnRate || storm == true) {
+				element.style.background = "#aaa";
+				isThunder = true;
+			}
+			clouds.push({x: xPosCloud, y: yPosCloud, width: cloudWidth, height: cloudHeight, speed: cloudSpeed, element: element, isThunder: isThunder})
+
+		}
+		function moveClouds() {
+			for (i = 0; i < clouds.length; i ++) {
+				let c = clouds[i];
+				c.x -= c.speed/FPS;
+				c.element.style.left = c.x + 'px';
+
+				// If the cloud goes off of screen
+				if (c.x + c.width < 0) {
+					// Removes cloud element
+					c.element.remove();
+					// Removes item of i from clouds array
+					clouds.splice(i, 1);
+				}
+				if (collide(c) && c.isThunder) gameEnd();
+			}
+
+			function collide(c) {
+
+				var top = [ 0, - pointHeight/2];
+				var newTop = [];
+				newTop.push(top[0] * Math.cos(theta) - top[1] * Math.sin(theta) + pointX);
+				newTop.push(top[0] * Math.sin(theta) + top[1] * Math.cos(theta) + pointY);
+
+				if ( newTop[0] > c.x && newTop[0] < c.x + c.width && newTop[1] > c.y && newTop[1] < c.y + c.height) return true;
+
+				var right = [ pointWidth/2, 0];
+				var newRight = [];
+				newRight.push(right[0] * Math.cos(theta) - right[1] * Math.sin(theta) + pointX);
+				newRight.push(right[0] * Math.sin(theta) + right[1] * Math.cos(theta) + pointY);
+
+				if ( newRight[0] > c.x && newRight[0] < c.x + c.width && newRight[1] > c.y && newRight[1] < c.y + c.height) return true;
+
+				var bottom = [ 0, pointHeight/2];
+				var newBottom = [];
+				newBottom.push(bottom[0] * Math.cos(theta) - bottom[1] * Math.sin(theta) + pointX);
+				newBottom.push(bottom[0] * Math.sin(theta) + bottom[1] * Math.cos(theta) + pointY);
+
+				if ( newBottom[0] > c.x && newBottom[0] < c.x + c.width && newBottom[1] > c.y && newBottom[1] < c.y + c.height) return true;
+
+				var left = [ - pointWidth/2, 0];
+				var newLeft = [];
+				newLeft.push(left[0] * Math.cos(theta) - left[1] * Math.sin(theta) + pointX);
+				newLeft.push(left[0] * Math.sin(theta) + left[1] * Math.cos(theta) + pointY);
+
+				if ( newLeft[0] > c.x && newLeft[0] < c.x + c.width && newLeft[1] > c.y && newLeft[1] < c.y + c.height) return true;
+
+
+				return false;
+			}
+		}
+
+		function gameEnd() {
+
+			clearInterval(interval);
+
+			restartScreen.classList.remove('hidden');
+			restartScreen.classList.add('fadeOn');
+
+			if ( (ticks/100) > maxScore) maxScore = (ticks/100);
+			localStorage.maxScore = maxScore;
+
+			console.log(totalDistance)
+			totalDistance += ticks/100;
+			localStorage.totalDistance = totalDistance;
+
+			instanceInfo.innerHTML = 'You just traveled ' + (ticks/100).toFixed(1) + ' miles.<br>You have traveled ' + totalDistance.toFixed(1) + ' miles total.<br>Your longest flight was ' + maxScore.toFixed(1) + ' miles!';
+		}
+
+		restartBtn.addEventListener('click', () => {
+			pointX = 0;
+			pointY = height/2;
+			theta = Math.PI/2; // 90 Degrees
+			distance = 0;
+			ticks = 0;
+			for (i = clouds.length - 1; i >= 0; i --) {
+				clouds[i].element.remove();
+				clouds.pop();
+			}
+
+			restartScreen.classList.remove('fadeOn');
+			restartScreen.classList.add('hidden');
+
+			runGame();
+
+		})
+
+
+		// POWERUPS
+		window.addEventListener('keypress', (e) => {
+			console.log(e.key);
+
+			// Boost powerup
+			if (e.key == powerUps.boost.key && distance >= powerUps.boost.pointsRequired) {
+				distance -= powerUps.boost.pointsRequired;
+				powerUps.boost.on = true;
+				booster.classList.remove('hidden');
+				setTimeout(function() {
+					powerUps.boost.on = false;
+					booster.classList.add('hidden');
+				}, 1000*powerUps.boost.length)
+			}
+
+			// Blast powerup
+			if (e.key == powerUps.blast.key && distance >= powerUps.blast.pointsRequired) {
+				distance -= powerUps.blast.pointsRequired;
+
+				for (i = clouds.length - 1; i >= 0; i --) {
+					var cloudX = clouds[i].x + clouds[i].width/2;
+					var cloudY = clouds[i].y + clouds[i].height/2;
+
+					var cloudDistance = Math.sqrt( (pointX - cloudX)**2 + 2*(pointY - cloudY)**2 );
+
+					console.log(cloudDistance);
+					if (cloudDistance <= powerUps.blast.distance) {
+						console.log(i, cloudDistance)
+						clouds[i].element.remove();
+						clouds.splice(i, 1);
+					}
+				}
+			}
+
+			// Radar powerup
+			if (e.key == powerUps.radar.key && distance >= powerUps.radar.pointsRequired) {
+				distance -= powerUps.radar.pointsRequired;
+
+				for (i = clouds.length - 1; i >= 0; i --) {
+					if (clouds[i].isThunder) {
+						clouds[i].element.style.zIndex = '-3';
+						clouds[i].element.style.boxShadow = '0 0 8px 5px #fa0';
+					}
+				}
+
+			}
+		})
+
+
+		runGame();
+	</script>
+</html>
